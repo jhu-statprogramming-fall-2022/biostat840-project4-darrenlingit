@@ -5,6 +5,10 @@ output:
     orientation: columns
     vertical_layout: fill
     runtime: shiny
+    theme:
+      base_font: 
+        google: Prompt
+      primary: "#34a4eb"
 ---
 
 ```{r setup, include=FALSE}
@@ -16,6 +20,7 @@ library(dplyr)
 library(ggalt)
 library(purrr)
 library(scales)
+library(DT)
 
 if(!dir.exists("data")){
   dir.create("data")
@@ -31,14 +36,78 @@ if(!file.exists("data/coffee.RDS")) {
 coffee <- readRDS("data/coffee.RDS")
 ```
 # About
+The question I'm hoping to answer is: What factors are associated with high graded coffee beans?
+
+The data comes from TidyTuesday ([2020-07-07](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-07/readme.md)) The data dictionary is located [here](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-07/readme.md#coffee_ratingscsv).
+
+###
+![[Source: TidyTuesday](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-07/readme.md)](images/coffee_beans.png)
 
 # The Data
+The data originally comes from the Coffee Quality Institute. The data is located [here](https://github.com/jldbc/coffee-quality-database). Ratings and other scores come from trained reviewers from Coffee Quality Institute. The overall coffee score is the sum of all qualities measures (aroma, flavor, afteraste, etc.).
 
-# Static Content 1
+###
+```{r}
+coffee_table <- coffee %>%
+  select(-c("altitude_mean_meters", "altitude_high_meters", "altitude_low_meters", "unit_of_measurement", "certification_contact", "certification_address", "lot_number", "ico_number", "in_country_partner", "owner_1", "variety", "expiration")) %>%
+  rename("Coffee Rating" = "total_cup_points",
+         "Species" = "species",
+         "Owner" = "owner",
+         "Country of Origin" = "country_of_origin",
+         "Farm Name" = farm_name,
+         "Mill" = "mill",
+         "Company" = "company",
+         "Altitude" = "altitude",
+         "Region" = "region",
+         "Producer" = "producer",
+         "Number of Bags" = "number_of_bags",
+         "Bag Weight" = "bag_weight",
+         "Harvest Year" = "harvest_year",
+         "Grading Date" = "grading_date",
+         "Processing Method" = "processing_method",
+         "Aroma" = "aroma",
+         "Flavor" = "flavor",
+         "Aftertaste" = "aftertaste",
+         "Acidity" = "acidity",
+         "Body" = "body",
+         "Balance" = "balance",
+         "Uniformity" = "uniformity",
+         "Clean Cup" = "clean_cup",
+         "Sweetness" = "sweetness",
+         "Cupper Points" = "cupper_points",
+         "Moisture" = "moisture",
+         "Category 1 Defects" = "category_one_defects",
+         "Quakers" = "quakers",
+         "Color" = "color",
+         "Category 2 Defects" = "category_two_defects",
+         "Certification Body" = "certification_body")
+datatable(coffee_table)
+```
 
-# Static Content 2
+# Coffee Rating Distribution (Static)
 
-# Interactive Content 1
+```{r}
+ggplot(coffee, aes(x = total_cup_points)) +
+  geom_histogram() +
+  labs(title = "Distribution of Coffee Ratings",
+       x = "Coffee Ratings",
+       y = "Rating Distribution")
+```
+
+# Coffee Bean Color Rating (Static)
+```{r}
+bean_color <- coffee %>%
+  select(total_cup_points, color) %>%
+  drop_na()
+
+ggplot(bean_color, aes(x = color, y = total_cup_points)) +
+  geom_boxplot() +
+  labs(title = "Coffee Rating by Bean Color",
+       x = "Coffee Bean Color",
+       y = "Coffee Rating Distribution")
+```
+
+# Country of Origin Rating (Interactive)
 ## Sidebar {.sidebar}
 ```{r}
 country_names <- unique(coffee$country_of_origin)
@@ -64,7 +133,7 @@ renderPlot ({
 
 ```
 
-# Interactive Content 2
+# Coffee Rating Factors (Interactive)
 ## Sidebar {.sidebar}
 ```{r}
 selectInput("rate_fct", label = "Rating Factor:",
@@ -92,11 +161,9 @@ renderPlot ({
 ```
 
 # Analysis
-## Column {data-width="650"}
+## Column {data-width="600"}
 
-### Chart A
-
-
+### Flavor Grade and Coffee Rating
 ```{r}
 coffee_flv_bal <- coffee %>%
   distinct() %>%
@@ -117,9 +184,9 @@ ggplot(coffee_flv_bal, aes(x = flavor, y = rating_means)) +
        subtitle = "By Color of Bean")
 ```
 
-## Column {data-width="350"}
+## Column {data-width="400"}
 
-### Chart B
+### Coffee Rating and Certification Body
 
 ```{r}
 coffee_cert_rate <- coffee %>%
@@ -141,7 +208,7 @@ ggplot(coffee_cert_rate, aes(y = reorder(certification_body, percent), x = perce
        subtitle = "A Lollipop Chart")
 ```
 
-### Chart C
+### Coffee Rating and Defects
 
 ```{r}
 defects <- coffee %>%
