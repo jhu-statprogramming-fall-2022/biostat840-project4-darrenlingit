@@ -1,0 +1,164 @@
+---
+title: "Project 4"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidytuesdayR)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(ggalt)
+library(purrr)
+library(scales)
+
+if(!dir.exists("data")){
+  dir.create("data")
+}
+
+if(!file.exists("data/coffee.RDS")) {
+  tuesdata <- tt_load("2020-07-07")
+  coffee <- tuesdata$coffee_ratings
+
+  saveRDS(coffee, file = "data/coffee.RDS")
+}
+
+coffee <- readRDS("data/coffee.RDS")
+```
+# About
+
+# The Data
+
+# Static Content 1
+
+# Static Content 2
+
+# Interactive Content 1
+## Sidebar {.sidebar}
+```{r}
+country_names <- unique(coffee$country_of_origin)
+selectInput("c_name", label = "Country of Origin:",
+            choices = country_names, selected = "Brazil")
+```
+
+## Chart
+```{r}
+renderPlot ({
+  ggplot(coffee %>%
+           distinct() %>%
+           select(total_cup_points, country_of_origin) %>%
+           filter(country_of_origin == input$c_name) %>%
+           drop_na(), 
+         aes(x = total_cup_points)) +
+    geom_density() +
+    labs(x = "Coffee Ratings",
+         y = "Density",
+         title = "Coffee Rating Denisty",
+         subtitle = "By Country of Origin")
+})
+
+```
+
+# Interactive Content 2
+## Sidebar {.sidebar}
+```{r}
+selectInput("rate_fct", label = "Rating Factor:",
+            choices = c("aroma", "flavor", "aftertaste", "acidity", "body", "balance"), selected = "aroma")
+```
+
+## Chart
+```{r}
+coffct_subtitle <- reactive({
+    paste("Coffee Factor: ", input$rate_fct, sep = "")
+  })
+
+coff_fct_df <- coffee %>%
+  select(total_cup_points, aroma, flavor, aftertaste, acidity, body, balance)
+
+renderPlot ({
+  ggplot(coff_fct_df, aes(x = !!as.symbol(input$rate_fct), y = total_cup_points)) +
+    geom_point() +
+    labs(x = "Factor Score",
+         y = "Coffee Rating",
+         title = "Coffee Ratings by Coffee Factor Score",
+         subtitle = coffct_subtitle())
+})
+
+```
+
+# Analysis
+## Column {data-width="650"}
+
+### Chart A
+
+
+```{r}
+coffee_flv_bal <- coffee %>%
+  distinct() %>%
+  select(total_cup_points, flavor, balance, color) %>%
+  filter(balance > 5.0) %>%
+  drop_na() %>%
+  group_by(flavor, color) %>%
+  summarise(rating_means = mean(total_cup_points))
+
+ggplot(coffee_flv_bal, aes(x = flavor, y = rating_means)) +
+  facet_wrap(vars(color)) +
+  geom_point() +
+  geom_smooth(se=FALSE, linetype="dashed", size=0.5) +
+  geom_xspline(size=0.5) +
+  labs(x = "Flavor Grade",
+       y = "Overall Rating",
+       title = "Coffee Ratings by Flavor Ratings",
+       subtitle = "By Color of Bean")
+```
+
+## Column {data-width="350"}
+
+### Chart B
+
+```{r}
+coffee_cert_rate <- coffee %>%
+  select(total_cup_points, certification_body) %>%
+  group_by(certification_body) %>%
+  summarise(rating_means = mean(total_cup_points))
+
+coffee_cert_rate$percent <- as.double(map(coffee_cert_rate$rating_means, function(x) x/100))
+
+
+
+ggplot(coffee_cert_rate, aes(y = reorder(certification_body, percent), x = percent)) +
+  geom_lollipop(horizontal = TRUE) +
+  theme(axis.text.y = element_text(size=5, angle=30)) +
+  scale_y_discrete(label = abbreviate) +
+  labs(x = "Percent Coffee Rating",
+       y = "Cerficiation Body",
+       title = "Coffee Ratings by Certification Bodies",
+       subtitle = "A Lollipop Chart")
+```
+
+### Chart C
+
+```{r}
+defects <- coffee %>%
+  select(category_one_defects, category_two_defects) %>%
+  drop_na()
+
+defect_total <- pmap_dbl(defects, .f = sum)
+
+defects$dfct_tot <- defect_total
+
+coffee_dfct <- data.frame(defects, coffee$total_cup_points)
+
+ggplot(coffee_dfct, aes(x = dfct_tot, y = coffee.total_cup_points)) + 
+  geom_point() +
+  geom_smooth(se=FALSE, linetype="dashed", size=0.5) +
+  labs(x = "Total Defects",
+       y = "Overall Rating",
+       title = "Coffee Rating by Total Defects",
+       subtitle = "Including Primary and Secondary Defects")
+```
