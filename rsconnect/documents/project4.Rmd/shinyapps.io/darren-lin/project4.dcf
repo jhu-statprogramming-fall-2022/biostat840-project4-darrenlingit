@@ -5,10 +5,9 @@ account: darren-lin
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7930520
-bundleId: 6666844
+bundleId: 6669145
 url: https://darren-lin.shinyapps.io/project4/
-when: 1671777561.40262
-lastSyncTime: 1671777561.40264
+when: 1671835891.54451
+lastSyncTime: 1671835891.54456
 asMultiple: FALSE
 asStatic: FALSE
-additionalFiles: images/coffee_beans.png

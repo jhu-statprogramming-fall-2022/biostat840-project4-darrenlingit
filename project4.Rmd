@@ -8,7 +8,7 @@ output:
     theme:
       base_font:
         google: Prompt
-      primary: '#34a4eb'
+      primary: '#237a94'
 resource_files:
 - images/coffee_beans.png
 ---
@@ -38,6 +38,8 @@ if(!file.exists("data/coffee.RDS")) {
 coffee <- readRDS("data/coffee.RDS")
 ```
 # About
+This data looks at the ratings of various coffee beans. It includes various factors like flavor and aroma. I thought it would be interesting to see what factors go into high quality coffee.
+
 The question I'm hoping to answer is: What factors are associated with high graded coffee beans?
 
 The data comes from TidyTuesday ([2020-07-07](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-07/readme.md)) The data dictionary is located [here](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-07/readme.md#coffee_ratingscsv).
@@ -86,7 +88,7 @@ coffee_table <- coffee %>%
 datatable(coffee_table)
 ```
 
-# Coffee Rating Distribution (Static)
+# Rating Distribution (Static)
 
 ```{r}
 ggplot(coffee, aes(x = total_cup_points)) +
@@ -96,7 +98,7 @@ ggplot(coffee, aes(x = total_cup_points)) +
        y = "Rating Distribution")
 ```
 
-# Coffee Bean Color Rating (Static)
+# Coffee Bean Color (Static)
 ```{r}
 bean_color <- coffee %>%
   select(total_cup_points, color) %>%
@@ -109,7 +111,7 @@ ggplot(bean_color, aes(x = color, y = total_cup_points)) +
        y = "Coffee Rating Distribution")
 ```
 
-# Country of Origin Rating (Interactive)
+# Country of Origin (Interactive)
 ## Sidebar {.sidebar}
 ```{r}
 country_names <- unique(coffee$country_of_origin)
@@ -135,7 +137,7 @@ renderPlot ({
 
 ```
 
-# Coffee Rating Factors (Interactive)
+# Coffee Factors (Interactive)
 ## Sidebar {.sidebar}
 ```{r}
 selectInput("rate_fct", label = "Rating Factor:",
@@ -165,7 +167,7 @@ renderPlot ({
 # Analysis
 ## Column {data-width="600"}
 
-### Flavor Grade and Coffee Rating
+### Chart 1: Flavor Grade and Coffee Rating
 ```{r}
 coffee_flv_bal <- coffee %>%
   distinct() %>%
@@ -188,7 +190,7 @@ ggplot(coffee_flv_bal, aes(x = flavor, y = rating_means)) +
 
 ## Column {data-width="400"}
 
-### Coffee Rating and Certification Body
+### Chart 2: Coffee Rating and Certification Body
 
 ```{r}
 coffee_cert_rate <- coffee %>%
@@ -210,7 +212,8 @@ ggplot(coffee_cert_rate, aes(y = reorder(certification_body, percent), x = perce
        subtitle = "A Lollipop Chart")
 ```
 
-### Coffee Rating and Defects
+
+### Chart 3: Coffee Rating and Defects
 
 ```{r}
 defects <- coffee %>%
@@ -231,3 +234,11 @@ ggplot(coffee_dfct, aes(x = dfct_tot, y = coffee.total_cup_points)) +
        title = "Coffee Rating by Total Defects",
        subtitle = "Including Primary and Secondary Defects")
 ```
+
+
+# Summary of Analysis
+Looking at Chart 1, while the blue-ish green and uncolored beans have a generally linear increase in bean rating as flavor grade increases, the blue-green beans seem to increase drastically in rating at around a flavor grade of 6.5-7 (out of 10), while the green beans seem to have a dip in overall rating around a flavor grade of 6 and 7.
+
+Looking at Chart 2, generally, it doesn't seem that the certification body affects a coffee bean's rating too much. METAD Agricultural Development plc seems to rate coffee beans the highest on average, and Instuto Hondereno del Cafe seems to rate coffee bean's the lowest on average (abbreviations used for the sake of space).
+
+According to Chart 3, it seems the generally, the more defects a bean has the lower its rating, which is to be expected.
