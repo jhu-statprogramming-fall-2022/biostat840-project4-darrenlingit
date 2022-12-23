@@ -1,14 +1,16 @@
 ---
 title: "Project 4"
-output: 
+output:
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
     runtime: shiny
     theme:
-      base_font: 
+      base_font:
         google: Prompt
-      primary: "#34a4eb"
+      primary: '#34a4eb'
+resource_files:
+- images/coffee_beans.png
 ---
 
 ```{r setup, include=FALSE}
